@@ -124,8 +124,8 @@ Route::group(['prefix' => 'user', 'middleware' => ['auth:sanctum','user']], func
 
     Route::group(['prefix' => 'comments'],function () {
         Route::post('/',[CommentController::class,'store']);
-        Route::get('/package/{id}',[CommentController::class,'index']);
-        Route::get('/{id}',[CommentController::class,'show']);
+        Route::get('/package/{package}',[CommentController::class,'index']);
+        Route::get('/{comment}',[CommentController::class,'show']);
         Route::post('/{id}',[CommentController::class,'update']);
         Route::delete('/{id}',[CommentController::class,'destroy']);
     });

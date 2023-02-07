@@ -10,10 +10,9 @@ use App\Models\Package;
 use Illuminate\Support\Facades\Auth;
 class CommentController extends Controller
 {
-    public function index($id)
+    public function index()
     {
-        $package = Package::findOrFail($id);
-        $comments = $package->comments()->get();
+        $comments = Comment::with(['packages']);
         return response()->json($comments);
     }
 
@@ -35,9 +34,8 @@ class CommentController extends Controller
         return response()->json(['message' => 'comment added succefully']);
     }
 
-    public function show($id)
+    public function show(Comment $comment)
     {
-        $comment = Comment::findOrFail($id);
         return response()->json([
             'comment' => $comment->value
         ]);
