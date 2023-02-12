@@ -16,6 +16,7 @@ class Guide extends Model
     public function packages() {
         return $this->belongsTo(Package::class);
     }
+
     public function countries() {
         return $this->belongsTo(Country::class);
     }

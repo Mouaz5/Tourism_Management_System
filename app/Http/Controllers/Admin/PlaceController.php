@@ -4,19 +4,36 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Place;
+use Carbon\Carbon;
+use http\Env\Response;
 use Illuminate\Http\Request;
 use App\Http\Requests\SavePlaceRequest;
 use App\Http\Requests\UpdatePlaceRequest;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+
 class PlaceController extends Controller
 {
-    private function uploadPlaceImage($request){
+//    private function uploadPlaceImage($request){
+//        $placeImage = $request->file('image');
+//        $imageName = time().$placeImage->getClientOriginalName();
+//        $placeImage->move(public_path('tourism/place-images'), $placeImage);
+//        $imageUrl = "public/tourism/place-images/$imageName";
+//        return $imageUrl;
+//    }
+    private function uploadPlaceImage($request) {
         $placeImage = $request->file('image');
-        $imageName = time().$placeImage->getClientOriginalName();
-        $placeImage->move(public_path('tourism/place-images'), $placeImage);
-        $imageUrl = "public/tourism/place-images/$imageName";
-        return $imageUrl;
+        if (isset($placeImage)) {
+            // Make Unique Name for Image
+            $currentDate = Carbon::now()->toDateString();
+            $imageName =$currentDate.'-'.uniqid().'.'.$placeImage->getClientOriginalExtension();
+
+            // Check Category Dir is exists
+            if (!Storage::disk('public')->exists('place-image')) {
+                Storage::disk('public')->makeDirectory('place-image');
+            }
+            Storage::disk('public')->put('packageImage/'.$imageName,$placeImage);
+        }
     }
 
     public function index()
@@ -45,30 +62,12 @@ class PlaceController extends Controller
            'message' => 'place added Successfuly',
         ], 200);
     }
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
+
     public function show(Place $place)
     {
-        $place = DB::table('places')
-        ->join('countries', 'countries.id', '=', 'places.id')
-        ->where('places.id', $place->id)
-        ->increment('views')
-        ->first();
-        return response()->json([
-            'place' => $place
-        ], 200);
+        return response()->json($place);
     }
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
+
     public function update(UpdatePlaceRequest $request, Place $place)
     {
         $imageUrl = '';
@@ -80,16 +79,12 @@ class PlaceController extends Controller
             ['added_By' => Auth::user()->name]);
 
         return response()->json([
-            'data' => $place,
+            'place' => $place,
+            'status' => 'success',
             'message' => 'Place info Update it Successfuly',
         ], 200);
     }
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
+
     public function destroy(Place $place)
     {
         $place->delete();

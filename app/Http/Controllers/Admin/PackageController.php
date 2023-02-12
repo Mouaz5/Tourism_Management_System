@@ -3,22 +3,37 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\Package;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Country;
 use App\Http\Requests\SavePackageRequest;
 use App\Http\Requests\UpdatePackageRequest;
-use App\Models\ListPlaces;
+use Illuminate\Support\Facades\Storage;
 
 class PackageController extends Controller
 {
-    private function uploadPackageImage($request){
-        $packageImage = $request->file('package_image');
-        $imageName = time().$packageImage->getClientOriginalName();
-        $packageImage->move(public_path('tourism/package-images'), $packageImage);
-        $imageUrl = "public/tourism/package-images/$imageName";
-        return $imageUrl;
+//    private function uploadPackageImage($request){
+//        $packageImage = $request->file('package_image');
+//        $imageName = time().$packageImage->getClientOriginalName();
+//        $packageImage->move(public_path('tourism/package-images'), $packageImage);
+//        $imageUrl = "public/tourism/package-images/$imageName";
+//        return $imageUrl;
+//    }
+
+    private function uploadPackageImage($request) {
+      $packageImage = $request->file('package_image');
+      if (isset($packageImage)) {
+          // Make Unique Name for Image
+          $currentDate = Carbon::now()->toDateString();
+          $imageName =$currentDate.'-'.uniqid().'.'.$packageImage->getClientOriginalExtension();
+
+          // Check Category Dir is exists
+          if (!Storage::disk('public')->exists('package-image')) {
+              Storage::disk('public')->makeDirectory('package-image');
+          }
+          Storage::disk('public')->put('packageImage/'.$imageName,$packageImage);
+      }
     }
 
     public function index()
@@ -36,43 +51,11 @@ class PackageController extends Controller
             $imageUrl = $this->uploadPackageImage($request);
         }
 
-        $places = $request->list_places;
-        $i1 = 0;$i2 = 0;
-        $input2 = [];
-        foreach($places as $place) {
-            $image = $place['image'];
-            $image_name = time().$image->getClientOriginalName();
-            $image->move(public_path('products'),$image_name);
-            //$path = $image->storeAs($destination_path,$image_name);
-            $path2 = "public/products/$image_name";
-            $input2[$i1] = $path2;
-            $i1++;
-        }
-        $package = new Package();
-        $package->added_By = Auth::user()->name;
-        $package->name = $request->name;
-        $package->price = $request->price;
-        $package->start_date = $request->start_date;
-        $package->end_date = $request->end_date;
-        $package->hotel_name = $request->hotel_name;
-        $package->company_name = $request->company_name;
-        $package->transport_type = $request->transport_type;
-        $package->description = $request->description;
-        $package->package_image = $imageUrl;
-        $package->duration = $request->duration;
-        $package->no_people = $request->no_people;
-        $package->country_id = $request->country_id;
-        $places = $request->list_places;
-        $package->save();
+        $package = Package::query()->create($request->validated() +
+            ['package_image' => $imageUrl] +
+            ['added_By' => Auth::user()->name]);
 
-        foreach($places as $place){
-            $package->places()->create([
-                'name' => $place['name'],
-                'image' => $input2[$i2],
-            ]);
-            $i2++;
-        }
-        $package->save();
+        $package->places()->attach($request->places);
         return response([
             'package' => $package,
             'message' => 'package added successfuly',
@@ -81,13 +64,7 @@ class PackageController extends Controller
 
     public function show(Package $package)
     {
-        $details = Package::with(['country', 'comments'])
-            ->where('id', $package->id)
-            ->get();
-
-        return response()->json([
-        	'package' => $details
-        ], 200);
+        return response()->json($package);
     }
 
     public function update(UpdatePackageRequest $request, Package $package)
@@ -98,49 +75,26 @@ class PackageController extends Controller
         	$package->package_image = $imageUrl;
         }
 
-        $destination_path = 'public/images/products';
-        $places = $request->list_places;
-        $i1 = 0;$i2 = 0;
-        $input2 = [];
-        foreach($places as $place) {
-            $image = $place['image'];
-            $randomString = Str::random(50);
-            $image_name = $randomString . $image->getClientOriginalName();
-            $path = $image->storeAs($destination_path,$image_name);
-            $input2[$i1] = $image_name;
-            $i1++;
-        }
-        $package->added_By = Auth::user()->name;
-        $package->name = $request->name;
-        $package->price = $request->price;
-        $package->start_date = $request->start_date;
-        $package->end_date = $request->end_date;
-        $package->hotel_name = $request->hotel_name;
-        $package->transport_type = $request->transport_type;
-        $package->description = $request->description;
-        $package->package_image = $imageUrl;
-        $package->duration = $request->duration;
-        $package->no_people = $request->no_people;
-        $package->country_id = $request->country_id;
-        $places = $request->list_places;
-        $package->save();
-        foreach($places as $place){
-            $package->places()->create([
-                'name' => $place['name'],
-                'image' => $input2[$i2],
-            ]);
-            $i2++;
-        }
-        $placess = new ListPlaces();
-        return response([
+        $package = Package::query()->update($request->validated() +
+            ['added_By' => Auth::user()->name]);
+
+        $package->places()->sync($request->places);
+
+        return response()->json([
             'package' => $package,
-            'places' => $placess->packages()->get(),
-            'message' => 'package updated successfuly',
-        ], 200);
+            'status' => 'success',
+            'message' => 'Package Updated Successfully'
+        ]);
     }
 
     public function destroy(Package $package)
     {
+        if(Storage::disk('public')->exists('package-image/'.$package->package_image))
+        {
+            Storage::disk('public')->delete('package-image/'.$package->package_image);
+        }
+
+        $package->places()->detach();
         $package->delete();
         return response()->json([
             'message' => 'package removed successfully!'
