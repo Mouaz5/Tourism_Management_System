@@ -54,10 +54,10 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth:sanctum','admin']], fu
        Route::delete('/{id}',[PlaceController::class,'destroy']);
     });
 
-    Route::group(['prefix' => 'package'],function () {
+    Route::group(['prefix' => 'packages'],function () {
         Route::post('/',[PackageController::class,'store']);
         Route::get('/',[PackageController::class,'index']);
-        Route::get('/{id}',[PackageController::class,'show']);
+        Route::get('/{package}',[PackageController::class,'show']);
         Route::post('/{id}',[PackageController::class,'update']);
         Route::delete('/{id}',[PackageController::class,'destroy']);
     });

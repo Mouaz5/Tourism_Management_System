@@ -30,59 +30,51 @@ class HotelController extends Controller
     }
 
     public function store(SaveHotelRequest $request) {
-        
+
         $imageUrl = '';
         if ($request->hasFile('image')) {
-            $imageUrl = this->uploadHotelImage($request);
+            $imageUrl = $this->uploadHotelImage($request);
         }
-        $hotel = new Hotel();
-        $hotel->h_name = $request->h_name;
-        $hotel->added_by = Auth::user()->name;
-        $hotel->image = $imageUrl;
-        $hotel->city = $request->city;
-        $hotel->country_id = $request->country_id;
-        $hotel->description = $request->description;
-        $hotel->save();
+
+        $hotel = Hotel::query()->create($request->validated() +
+            ['imageUrl' => $imageUrl] +
+            ['added_By' => Auth::user()->name]);
+
         return response()->json([
             'data' => $hotel,
             'message' => 'hotel added successfully',
         ], 200);
     }
 
-    public function show($id){
-        $hotel = DB::table('hotels')
-        ->join('countries', 'countries.id', '=', 'hotels.country_id')
-        ->where('hotels.id', $id)
+    public function show(Hotel $hotel){
+        $details = Hotel::with(['country', 'comments'])
+        ->where('id', $hotel->id)
         ->increment('views')
-        ->first();
+        ->get();
+
         return response()->json([
-            'hotel' => $hotel
+            'hotel' => $details
         ], 200);
     }
 
-    public function update(UpdateHotelRequest $request, $id) {
-        
-        $hotel = Hotel::findOrFail($id);
+    public function update(UpdateHotelRequest $request, Hotel $hotel) {
+
         $imageUrl = '';
         if ($request->hasFile('image')) {
-            $imageUrl = this->uploadHotelImage($request);
+            $imageUrl = $this->uploadHotelImage($request);
         }
-        $hotel->h_name = $request->h_name;
-        $hotel->added_by = Auth::user()->name;
-        $hotel->image = $imageUrl;
-        $hotel->rate = $request->rate;
-        $hotel->city = $request->city;
-        $hotel->country_id = $request->country_id;
-        $hotel->description = $request->description;
-        $hotel->save();
+
+        $data = Hotel::query()->update($request->validated() +
+            ['image' => $imageUrl] +
+            ['added_By' => Auth::user()->name]);
+
         return response()->json([
-            'data' => $hotel,
+            'data' => $data,
             'message' => 'hotel info updated successfully',
         ], 200);
     }
 
-    public function destroy($id){
-        $hotel = Hotel::findOrFail($id);
+    public function destroy(Hotel $hotel){
         $hotel->delete();
         return response([
             'message' => 'hotel removed successfully'

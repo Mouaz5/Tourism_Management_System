@@ -10,7 +10,6 @@ use App\Models\Country;
 use App\Http\Requests\SavePackageRequest;
 use App\Http\Requests\UpdatePackageRequest;
 use App\Models\ListPlaces;
-use Illuminate\Support\Facades\DB;
 
 class PackageController extends Controller
 {
@@ -81,30 +80,25 @@ class PackageController extends Controller
         ], 200);
     }
 
-    public function show($id)
+    public function show(Package $package)
     {
-        $package = DB::table('packages')
-        ->join('countries', 'countries.id', '=', 'packages.country_id')
-        ->select('packages.*', 'countries.name as country_name')
-        ->where('packages.id', '=', $id)
-        ->first();
+        $details = Package::with(['country', 'comments'])
+            ->where('id', $package->id)
+            ->get();
 
-        $data = collect($package)->except(
-            'country_id', 'created_at', 'updated_at'
-        );
         return response()->json([
-        	'package' => $data
+        	'package' => $details
         ], 200);
     }
 
-    public function update(UpdatePackageRequest $request, $id)
+    public function update(UpdatePackageRequest $request, Package $package)
     {
     	$imageUrl = '';
-        $package = Package::findOrFail($id);
         if($request->hasFile('package_image')) {
-        	$imageUrl = this->uploadPackageImage($request);
+        	$imageUrl = $this->uploadPackageImage($request);
         	$package->package_image = $imageUrl;
         }
+
         $destination_path = 'public/images/products';
         $places = $request->list_places;
         $i1 = 0;$i2 = 0;
@@ -146,10 +140,9 @@ class PackageController extends Controller
         ], 200);
     }
 
-    public function destroy($id)
+    public function destroy(Package $package)
     {
-        $p = Package::findOrFail($id);
-        $p->delete();
+        $package->delete();
         return response()->json([
             'message' => 'package removed successfully!'
         ], 200);
