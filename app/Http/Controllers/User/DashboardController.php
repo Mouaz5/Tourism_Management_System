@@ -15,12 +15,8 @@ use Illuminate\Support\Facades\DB;
 class DashboardController extends Controller
 {
     public function index() {
-        $packages = Package::latest()->get();
-        $countries = Package::latest()->get();
-        return response()->json([
-            'packages' => $packages,
-            'countries' => $countries,
-        ]);
+        $packages = Package::with('country')->get();
+        return $packages;
     }
 
     public function getPlaces(){
@@ -32,16 +28,17 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function getPlaceByCountry($id) {
-        $country = Country::find($id);
-        $places = Place::where('country_id', $country['id'])->get();
+    public function getPlaceByCountry(Country $country) {
+        $places = $country->places()->get();
         return response()->json(['data' => $places]);
     }
 
-    public function getPlaceDetails($id){
-        $place = Place::findOrFail($id);
+    public function getPlaceDetails(Place $place){
         $place->increment('views');
-        return response()->json(['data' => $place,]);
+        $data = Place::with('country')
+            ->where('id', $place->id)
+            ->get();
+        return response()->json(['data' => $data]);
     }
 
     public function getPackage() {
@@ -63,8 +60,7 @@ class DashboardController extends Controller
 
     }
 
-    public function getPackageByCountry($id) {
-        $country = Country::findOrFail($id);
+    public function getPackageByCountry(Country $country) {
         $package = $country->packages()->get();
         //$package = Package::where('country_id', $country['id'])->get();
         return response()->json(['data' => $package]);

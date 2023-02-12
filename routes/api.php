@@ -58,8 +58,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth:sanctum','admin']], fu
         Route::post('/',[PackageController::class,'store']);
         Route::get('/',[PackageController::class,'index']);
         Route::get('/{package}',[PackageController::class,'show']);
-        Route::post('/{id}',[PackageController::class,'update']);
-        Route::delete('/{id}',[PackageController::class,'destroy']);
+        Route::post('/{package}',[PackageController::class,'update']);
+        Route::delete('/{package}',[PackageController::class,'destroy']);
     });
 
     Route::group(['prefix' => 'hotels'],function () {
@@ -100,7 +100,7 @@ Route::group(['prefix' => 'user', 'middleware' => ['auth:sanctum','user']], func
     Route::group(['prefix' => 'places'],function () {
         Route::get('/',[DashboardController::class,'getPlaces']);
         Route::get('/details/{id}',[DashboardController::class,'getPlaceDetails']);
-        Route::get('/country/{id}',[DashboardController::class,'getPlaceByCountry']);
+        Route::get('/country/{country}',[DashboardController::class,'getPlaceByCountry']);
     });
 
     Route::group(['prefix' => 'hotels'],function () {
@@ -112,7 +112,7 @@ Route::group(['prefix' => 'user', 'middleware' => ['auth:sanctum','user']], func
     Route::group(['prefix' => 'packages'],function () {
         Route::get('/',[DashboardController::class,'getPackage']);
         Route::get('/details/{id}',[DashboardController::class,'getPackageDetails']);
-        Route::get('/country/{id}',[DashboardController::class,'getPackageByCountry']);
+        Route::get('/country/{country}',[DashboardController::class,'getPackageByCountry']);
     });
 
     Route::group(['prefix' => 'bookings'],function () {

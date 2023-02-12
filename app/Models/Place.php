@@ -16,7 +16,9 @@ class Place extends Model
     public function placetype(){
         return $this->belongsTo(Placetype::class);
     }
-    public function city(){
-        return $this->belongsTo(City::class);
+
+    public function country()
+    {
+        return $this->belongsTo(Country::class);
     }
 }
