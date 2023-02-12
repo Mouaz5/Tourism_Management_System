@@ -4,22 +4,18 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Place;
-use App\Models\City;
-use App\Models\Placetype;
 use Illuminate\Http\Request;
 use App\Http\Requests\SavePlaceRequest;
 use App\Http\Requests\UpdatePlaceRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Image;
 class PlaceController extends Controller
 {
-    protected function uploadPlaceImage($request){
+    private function uploadPlaceImage($request){
         $placeImage = $request->file('image');
-        $imageName = time().$image->getClientOriginalName();
-        $directory = 'tourism/place-images/';
-        $imageUrl = $directory.$imageName;
-        Image::make($placeImage)->save($imageUrl);
+        $imageName = time().$placeImage->getClientOriginalName();
+        $placeImage->move(public_path('tourism/place-images'), $placeImage);
+        $imageUrl = "public/tourism/place-images/$imageName";
         return $imageUrl;
     }
 
@@ -37,17 +33,12 @@ class PlaceController extends Controller
     {
         $imageUrl = '';
         if ($request->hasFile('image')) {
-            $imageUrl = this->uploadPlaceImage($request);
+            $imageUrl = $this->uploadPlaceImage($request);
         }
-        $place = new Place();
-        $place->added_By = Auth::user()->name;
-        $place->name = $request->name;
-        $place->country_id = $request->country_id;
-        $place->city = $request->city;
-        $place->rating = $request->rating;
-        $place->description = $request->description;
-        $place->image = $imageUrl;
-        $place->save();
+
+        $place = Place::query()->create($request->validated() +
+            ['image' => $imageUrl] +
+            ['added_By' => Auth::user()->name]);
 
         return response()->json([
            'data' => $place,
@@ -60,11 +51,11 @@ class PlaceController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Place $place)
     {
         $place = DB::table('places')
         ->join('countries', 'countries.id', '=', 'places.id')
-        ->where('places.id', $id)
+        ->where('places.id', $place->id)
         ->increment('views')
         ->first();
         return response()->json([
@@ -78,22 +69,15 @@ class PlaceController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(UpdatePlaceRequest $request, $id)
+    public function update(UpdatePlaceRequest $request, Place $place)
     {
-        $place = Place::findOrFail($id);
         $imageUrl = '';
         if ($request->hasFile('image')) {
-            $imageUrl = this->uploadPlaceImage($request);
+            $imageUrl = $this->uploadPlaceImage($request);
             $place->image = $imageUrl;
         }
-        
-        $place->added_By = Auth::user()->name;
-        $place->name = $request->name;
-        $place->country_id = $request->country_id;
-        $place->city = $request->city;
-        $place->rating = $request->rating;
-        $place->description = $request->description;
-        $place->save();
+        $place = Place::query()->update($request->validated() +
+            ['added_By' => Auth::user()->name]);
 
         return response()->json([
             'data' => $place,
@@ -106,13 +90,11 @@ class PlaceController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Place $place)
     {
-        $place = Place::findOrFail($id);
         $place->delete();
         return response()->json([
             'message' => 'place has been delete it'
         ], 200);
-
     }
 }

@@ -13,12 +13,11 @@ use Image;
 
 class HotelController extends Controller
 {
-    protected function uploadHotelImage($request) {
+    private function uploadHotelImage($request) {
         $hotelImage = $request->file('image');
         $imageName = time().$hotelImage->getClientOriginalName();
-        $directory = 'tourism/hotel-images/';
-        $imageUrl = $directory.$imageName;
-        Image::make($hotelImage)->save($imageUrl);
+        $hotelImage->move(public_path('tourism/hotel-images'), $hotelImage);
+        $imageUrl = "public/tourism/hotel-images/$imageName";
         return $imageUrl;
     }
 
@@ -62,14 +61,14 @@ class HotelController extends Controller
         $imageUrl = '';
         if ($request->hasFile('image')) {
             $imageUrl = $this->uploadHotelImage($request);
+            $hotel->image = $imageUrl;
         }
 
-        $data = Hotel::query()->update($request->validated() +
-            ['image' => $imageUrl] +
+        $hotel = Hotel::query()->update($request->validated() +
             ['added_By' => Auth::user()->name]);
 
         return response()->json([
-            'data' => $data,
+            'data' => $hotel,
             'message' => 'hotel info updated successfully',
         ], 200);
     }

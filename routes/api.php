@@ -46,12 +46,12 @@ Route::post('password/code/check', ResetPasswordController::class);
 
 Route::group(['prefix' => 'admin', 'middleware' => ['auth:sanctum','admin']], function () {
 
-    Route::group(['prefix' => 'place'],function () {
+    Route::group(['prefix' => 'places'],function () {
        Route::post('/',[PlaceController::class,'store']);
        Route::get('/',[PlaceController::class,'index']);
-       Route::get('/{id}',[PlaceController::class,'show']);
-       Route::post('/{id}',[PlaceController::class,'update']);
-       Route::delete('/{id}',[PlaceController::class,'destroy']);
+       Route::get('/{place}',[PlaceController::class,'show']);
+       Route::post('/{place}',[PlaceController::class,'update']);
+       Route::delete('/{place}',[PlaceController::class,'destroy']);
     });
 
     Route::group(['prefix' => 'packages'],function () {
@@ -62,12 +62,12 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth:sanctum','admin']], fu
         Route::delete('/{id}',[PackageController::class,'destroy']);
     });
 
-    Route::group(['prefix' => 'hotel'],function () {
+    Route::group(['prefix' => 'hotels'],function () {
         Route::post('/',[HotelController::class,'store']);
         Route::get('/',[HotelController::class,'index']);
-        Route::get('/{id}',[HotelController::class,'show']);
-        Route::post('/{id}',[HotelController::class,'update']);
-        Route::delete('/{id}',[HotelController::class,'destroy']);
+        Route::get('/{hotel}',[HotelController::class,'show']);
+        Route::post('/{hotel}',[HotelController::class,'update']);
+        Route::delete('/{hotel}',[HotelController::class,'destroy']);
     });
 
     Route::group(['prefix' => 'booking'],function () {

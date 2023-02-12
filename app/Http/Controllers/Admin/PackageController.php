@@ -13,12 +13,11 @@ use App\Models\ListPlaces;
 
 class PackageController extends Controller
 {
-    protected function uploadPackageImage($request){
+    private function uploadPackageImage($request){
         $packageImage = $request->file('package_image');
         $imageName = time().$packageImage->getClientOriginalName();
-        $directory = 'tourism/package-images/';
-        $imageUrl = $directory.$imageName;
-        Image::make($packageImage)->save($imageUrl);
+        $packageImage->move(public_path('tourism/package-images'), $packageImage);
+        $imageUrl = "public/tourism/package-images/$imageName";
         return $imageUrl;
     }
 

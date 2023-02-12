@@ -15,9 +15,8 @@ class GuideController extends Controller
 	protected function uploadGuiderImage($request) {
 		$guiderImage = $request->file('image');
 		$imageName = time().$guiderImage->getClientOriginalName();
-		$directory = 'tourism/guider-images';
-		$imageUrl = $directory.$imageName;
-		Image::make($guiderImage)->save($imageUrl);
+		$guiderImage->move(public_path('tourism/guider-images'), $guiderImage);
+		$imageUrl = "public/tourism/guider-images/$imageName";
 		return $imageUrl;
 	}
 
@@ -33,9 +32,9 @@ class GuideController extends Controller
     {
         $imageUrl = '';
         if ($request->hasFile('image')) {
-        	$imageUrl = $this->uploadGuiderImage($request);
-        	$guide->image = $imageUrl;
+            $imageUrl = $this->uploadGuiderImage($request);
         }
+
         $guide = new Guide();
         $guide->name = $request->name;
         $guide->email = $request->email;
@@ -70,8 +69,7 @@ class GuideController extends Controller
     	$imageUrl = '';
         $guidr = Guider::findOrFail($id);
         if ($request->file('image')) {
-        	$imageUrl = this->uploadGuiderImage($request);
-        	$guide->image = $imageUrl;
+        	$imageUrl = $this->uploadGuiderImage($request);
         }
         $guide->name = $request->name;
         $guide->email = $request->email;
