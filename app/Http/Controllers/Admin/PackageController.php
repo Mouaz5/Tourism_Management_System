@@ -75,7 +75,7 @@ class PackageController extends Controller
         	$package->package_image = $imageUrl;
         }
 
-        $package = Package::query()->update($request->validated() +
+        $package->update($request->validated() +
             ['added_By' => Auth::user()->name]);
 
         $package->places()->sync($request->places);

@@ -12,7 +12,7 @@ class CommentController extends Controller
 {
     public function index()
     {
-        $comments = Comment::with(['packages']);
+        $comments = Comment::with(['packages'])->get();
         return response()->json($comments);
     }
 

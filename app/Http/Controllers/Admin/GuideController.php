@@ -52,7 +52,7 @@ class GuideController extends Controller
         	$guider->image = $imageUrl;
         }
 
-        $guider = Guide::query()->update($request->validated());
+        $guider->update($request->validated());
 
         return response()->json([
             'guider' => $guider,

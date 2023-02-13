@@ -45,15 +45,8 @@ class HotelController extends Controller
         ], 200);
     }
 
-    public function show(Hotel $hotel){
-        $details = Hotel::with(['country', 'comments'])
-        ->where('id', $hotel->id)
-        ->increment('views')
-        ->get();
-
-        return response()->json([
-            'hotel' => $details
-        ], 200);
+    public function show(Hotel $hotel) {
+        return response()->json($hotel);
     }
 
     public function update(UpdateHotelRequest $request, Hotel $hotel) {
@@ -64,7 +57,7 @@ class HotelController extends Controller
             $hotel->image = $imageUrl;
         }
 
-        $hotel = Hotel::query()->update($request->validated() +
+        $hotel->update($request->validated() +
             ['added_By' => Auth::user()->name]);
 
         return response()->json([

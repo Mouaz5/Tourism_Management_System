@@ -75,7 +75,7 @@ class PlaceController extends Controller
             $imageUrl = $this->uploadPlaceImage($request);
             $place->image = $imageUrl;
         }
-        $place = Place::query()->update($request->validated() +
+        $place->update($request->validated() +
             ['added_By' => Auth::user()->name]);
 
         return response()->json([
